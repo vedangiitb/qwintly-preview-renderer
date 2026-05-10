@@ -9,7 +9,7 @@ export default async function Page({
   params: Promise<{ slug?: string[] }>;
 }) {
   const h = await headers();
-  const pageConfigId = h.get("x-page-config-id");
+  const pageConfigId = h.get("x-gen-session-id");
 
   if (!pageConfigId) {
     return <div>404</div>;
