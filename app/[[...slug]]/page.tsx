@@ -1,11 +1,11 @@
 import { RenderElement } from "@/lib/renderer/RenderElement";
 import { fetchConfig } from "@/services/fetchConfig.service";
-import type { BuilderElement } from "@/types/elements";
 import { PageConfig, Snapshot } from "@/types/snapshot";
 import { headers } from "next/headers";
+import { compile } from "tailwindcss";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { compile } from "tailwindcss";
+import type { BuilderElement } from "@/types/elements";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
