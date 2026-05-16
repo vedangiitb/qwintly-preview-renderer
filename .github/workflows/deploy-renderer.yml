@@ -52,6 +52,7 @@ jobs:
             --image $IMAGE \
             --region asia-south1 \
             --platform managed \
+            --allow-unauthenticated \
             --service-account ${{ vars.PREVIEW_RENDERER_SA_EMAIL }} \
             --set-env-vars GCP_PROJECT_ID_QWINTLY=${{ vars.GCP_PROJECT_ID_QWINTLY }},NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }},NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }} \
             --min-instances 0 \
