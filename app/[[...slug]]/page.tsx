@@ -6,6 +6,7 @@ import { compile } from "tailwindcss";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { BuilderElement } from "@/types/elements";
+import Script from "next/script";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
@@ -63,6 +64,10 @@ export default async function Page({
   const candidates = collectTailwindCandidates(pageConfig.elements);
   const compiler = await tailwindCompilerPromise;
   const runtimeCss = compiler.build(candidates);
+  const parentOrigin =
+    process.env.NEXT_PUBLIC_PARENT_ORIGIN;
+
+  if (!parentOrigin) throw new Error("NEXT_PUBLIC_PARENT_ORIGIN is required");
 
   return (
     <>
@@ -70,6 +75,11 @@ export default async function Page({
       {pageConfig.elements.map((el) => (
         <RenderElement key={el.id} el={el} />
       ))}
+      <Script
+        src="/qwintly-preview-editor.js"
+        data-parent-origin={parentOrigin}
+        strategy="afterInteractive"
+      />
     </>
   );
 }
