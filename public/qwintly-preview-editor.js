@@ -6,7 +6,9 @@
 
   var currentScript = document.currentScript;
   var parentOrigin =
-    (currentScript && currentScript.dataset && currentScript.dataset.parentOrigin) ||
+    (currentScript &&
+      currentScript.dataset &&
+      currentScript.dataset.parentOrigin) ||
     null;
 
   var editEnabled = false;
@@ -20,7 +22,7 @@
     var style = document.createElement("style");
     style.id = "__qwintly_preview_editor_style";
     style.textContent =
-      "#qwintly-editor-toolbar{position:absolute;z-index:2147483647;display:none;gap:6px;padding:6px 8px;background:rgba(15,23,42,.88);color:#fff;border:1px solid rgba(148,163,184,.35);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.25);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,\"Apple Color Emoji\",\"Segoe UI Emoji\";font-size:12px;line-height:1}" +
+      '#qwintly-editor-toolbar{position:absolute;z-index:2147483647;display:none;gap:6px;padding:6px 8px;background:rgba(15,23,42,.88);color:#fff;border:1px solid rgba(148,163,184,.35);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.25);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";font-size:12px;line-height:1}' +
       "#qwintly-editor-toolbar button{appearance:none;border:0;background:rgba(255,255,255,.12);color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}" +
       "#qwintly-editor-toolbar button:hover{background:rgba(255,255,255,.18)}" +
       "#qwintly-editor-toolbar .qwintly-editor-sep{width:1px;background:rgba(255,255,255,.22);margin:0 2px}" +
@@ -78,7 +80,9 @@
       e.preventDefault();
       e.stopPropagation();
       var btn =
-        e.target && e.target.closest ? e.target.closest("button[data-action]") : null;
+        e.target && e.target.closest
+          ? e.target.closest("button[data-action]")
+          : null;
       if (!btn) return;
       var action = btn.getAttribute("data-action");
       if (action === "confirm") confirmEdit();
@@ -200,8 +204,11 @@
       temp.innerHTML = op.oldOuterHTML || "";
       var node = temp.firstElementChild;
       if (!node) return;
-      var before = op.nextSiblingId ? document.getElementById(op.nextSiblingId) : null;
-      if (before && before.parentElement === parent) parent.insertBefore(node, before);
+      var before = op.nextSiblingId
+        ? document.getElementById(op.nextSiblingId)
+        : null;
+      if (before && before.parentElement === parent)
+        parent.insertBefore(node, before);
       else parent.appendChild(node);
       return;
     }
@@ -266,7 +273,10 @@
     if (!data || data.source !== SOURCE) return;
 
     if (data.type === "PING") {
-      postToParent({ type: "READY" });
+      postToParent({
+        type: "READY",
+        route: location.pathname + location.search + location.hash,
+      });
       return;
     }
     if (data.type === "SET_EDIT_MODE") {
@@ -288,6 +298,8 @@
   document.addEventListener("click", onClick, true);
   document.addEventListener("keydown", onKeyDown, true);
 
-  postToParent({ type: "READY" });
+  postToParent({
+    type: "READY",
+    route: location.pathname + location.search + location.hash,
+  });
 })();
-
