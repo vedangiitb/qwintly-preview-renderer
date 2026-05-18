@@ -245,8 +245,14 @@
       confirmEdit();
       return;
     }
-    if (e.key === "Delete" || e.key === "Backspace") {
-      if (e.metaKey || e.ctrlKey) return;
+    // Allow normal text editing keys (Backspace/Delete) while contentEditable.
+    // Use Ctrl/Cmd+Backspace/Delete as an explicit shortcut to delete the whole element.
+    if (
+      (e.key === "Delete" || e.key === "Backspace") &&
+      (e.metaKey || e.ctrlKey) &&
+      !e.shiftKey &&
+      !e.altKey
+    ) {
       e.preventDefault();
       deleteActiveEl();
       return;
