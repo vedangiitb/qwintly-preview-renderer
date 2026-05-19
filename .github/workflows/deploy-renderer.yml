@@ -40,9 +40,13 @@ jobs:
         run: |
           IMAGE=${{ vars.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID_QWINTLY }}/qwintly-images/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-          gcloud builds submit \
-            --tag $IMAGE \
+          docker build \
+            --build-arg NEXT_PUBLIC_PARENT_ORIGIN=${{ vars.NEXT_PUBLIC_PARENT_ORIGIN }} \
+            --build-arg LOCAL_PARENT_ORIGIN=${{ vars.LOCAL_PARENT_ORIGIN }} \
+            -t $IMAGE \
             .
+
+          docker push $IMAGE
 
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
@@ -54,7 +58,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --service-account ${{ vars.PREVIEW_RENDERER_SA_EMAIL }} \
-            --set-env-vars GCP_PROJECT_ID_QWINTLY=${{ vars.GCP_PROJECT_ID_QWINTLY }},NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }},NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }} \
+            --set-env-vars GCP_PROJECT_ID_QWINTLY=${{ vars.GCP_PROJECT_ID_QWINTLY }},NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }},NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }},NEXT_PUBLIC_PARENT_ORIGIN=${{ vars.NEXT_PUBLIC_PARENT_ORIGIN }},LOCAL_PARENT_ORIGIN=${{ vars.LOCAL_PARENT_ORIGIN }} \
             --min-instances 0 \
             --max-instances 10 \
             --concurrency 1 \
