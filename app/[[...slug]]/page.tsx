@@ -1,12 +1,12 @@
 import { RenderElement } from "@/lib/renderer/RenderElement";
 import { fetchConfig } from "@/services/fetchConfig.service";
+import type { BuilderElement } from "@/types/elements";
 import { PageConfig, Snapshot } from "@/types/snapshot";
 import { headers } from "next/headers";
-import { compile } from "tailwindcss";
+import Script from "next/script";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { BuilderElement } from "@/types/elements";
-import Script from "next/script";
+import { compile } from "tailwindcss";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
@@ -64,8 +64,7 @@ export default async function Page({
   const candidates = collectTailwindCandidates(pageConfig.elements);
   const compiler = await tailwindCompilerPromise;
   const runtimeCss = compiler.build(candidates);
-  const parentOrigin =
-    process.env.NEXT_PUBLIC_PARENT_ORIGIN;
+  const parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN;
 
   if (!parentOrigin) throw new Error("NEXT_PUBLIC_PARENT_ORIGIN is required");
 
