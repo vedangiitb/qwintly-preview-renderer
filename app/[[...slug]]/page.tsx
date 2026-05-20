@@ -1,5 +1,5 @@
 import { RenderElement } from "@/lib/renderer/RenderElement";
-import { fetchConfig } from "@/services/fetchConfig.service";
+import { getSnapshot } from "@/lib/snapshot/getSnapshot";
 import type { BuilderElement } from "@/types/elements";
 import { PageConfig, Snapshot } from "@/types/snapshot";
 import { headers } from "next/headers";
@@ -49,7 +49,7 @@ export default async function Page({
 
   const route = slug?.length ? `/${slug.join("/")}` : "/";
 
-  const snapshot: Snapshot = await fetchConfig(pageConfigId);
+  const snapshot: Snapshot = await getSnapshot(pageConfigId);
 
   if (!snapshot) {
     return <div>404</div>;
