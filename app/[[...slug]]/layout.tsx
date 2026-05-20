@@ -14,7 +14,7 @@ export default async function SlugLayout({
   const cfg = pageConfigId
     ? (await getSnapshot(pageConfigId)).styleConfig
     : defaultStyleConfigJson;
-  const styleTokens = buildCssVars(cfg);
+  const styleTokens = buildCssVars(cfg ?? defaultStyleConfigJson);
 
   return (
     <>
