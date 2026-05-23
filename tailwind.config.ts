@@ -6,6 +6,9 @@ const withVariants = (inner: string) =>
   new RegExp(`^(?:[\\w-]+:)*${inner}$`);
 
 const config = {
+  // Force previews to render in "light" mode regardless of the user's OS/browser
+  // preference. This disables `dark:` variants driven by `prefers-color-scheme`.
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",

@@ -1,12 +1,13 @@
 import { RenderElement } from "@/lib/renderer/RenderElement";
-import { fetchConfig } from "@/services/fetchConfig.service";
+import { getSnapshot } from "@/lib/snapshot/getSnapshot";
+import type { BuilderElement } from "@/types/elements";
 import { PageConfig, Snapshot } from "@/types/snapshot";
 import { headers } from "next/headers";
-import { compile } from "tailwindcss";
+import Script from "next/script";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { BuilderElement } from "@/types/elements";
-import Script from "next/script";
+import { compile } from "tailwindcss";
+import { NotFoundPage } from "@/components/not-found-page";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
@@ -42,30 +43,29 @@ export default async function Page({
   const pageConfigId = h.get("x-gen-session-id");
 
   if (!pageConfigId) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const { slug } = await params;
 
   const route = slug?.length ? `/${slug.join("/")}` : "/";
 
-  const snapshot: Snapshot = await fetchConfig(pageConfigId);
+  const snapshot: Snapshot = await getSnapshot(pageConfigId);
 
   if (!snapshot) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const pageConfig: PageConfig = snapshot.routes[route];
 
   if (!pageConfig) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const candidates = collectTailwindCandidates(pageConfig.elements);
   const compiler = await tailwindCompilerPromise;
   const runtimeCss = compiler.build(candidates);
-  const parentOrigin =
-    process.env.NEXT_PUBLIC_PARENT_ORIGIN;
+  const parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN;
 
   if (!parentOrigin) throw new Error("NEXT_PUBLIC_PARENT_ORIGIN is required");
 
