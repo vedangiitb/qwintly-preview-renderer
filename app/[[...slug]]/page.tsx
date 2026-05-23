@@ -7,6 +7,7 @@ import Script from "next/script";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { compile } from "tailwindcss";
+import { NotFoundPage } from "@/components/not-found-page";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
@@ -42,7 +43,7 @@ export default async function Page({
   const pageConfigId = h.get("x-gen-session-id");
 
   if (!pageConfigId) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const { slug } = await params;
@@ -52,13 +53,13 @@ export default async function Page({
   const snapshot: Snapshot = await getSnapshot(pageConfigId);
 
   if (!snapshot) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const pageConfig: PageConfig = snapshot.routes[route];
 
   if (!pageConfig) {
-    return <div>404</div>;
+    return <NotFoundPage />;
   }
 
   const candidates = collectTailwindCandidates(pageConfig.elements);
