@@ -2,24 +2,20 @@
   if (window.__qwintlyPreviewEditorInstalled) return;
   window.__qwintlyPreviewEditorInstalled = true;
 
-  var SOURCE = "qwintly-preview-editor";
+  const SOURCE = "qwintly-preview-editor";
 
-  var currentScript = document.currentScript;
-  var parentOrigin =
-    (currentScript &&
-      currentScript.dataset &&
-      currentScript.dataset.parentOrigin) ||
-    null;
+  const currentScript = document.currentScript;
+  const parentOrigin = currentScript?.dataset?.parentOrigin || null;
 
-  var editEnabled = false;
-  var hoveredEl = null;
-  var activeEl = null;
-  var activeOldText = null;
-  var toolbar = null;
+  let editEnabled = false;
+  let hoveredEl = null;
+  let activeEl = null;
+  let activeOldText = null;
+  let toolbar = null;
 
   function installStyles() {
     if (document.getElementById("__qwintly_preview_editor_style")) return;
-    var style = document.createElement("style");
+    const style = document.createElement("style");
     style.id = "__qwintly_preview_editor_style";
     style.textContent =
       '#qwintly-editor-toolbar{position:absolute;z-index:2147483647;display:none;gap:6px;padding:6px 8px;background:rgba(15,23,42,.88);color:#fff;border:1px solid rgba(148,163,184,.35);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.25);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";font-size:12px;line-height:1}' +
@@ -33,7 +29,7 @@
 
   function isEligibleEl(el) {
     if (!el || el.nodeType !== 1) return false;
-    var tag = (el.tagName || "").toLowerCase();
+    const tag = (el.tagName || "").toLowerCase();
     if (
       tag === "html" ||
       tag === "body" ||
@@ -43,7 +39,7 @@
     )
       return false;
     if (!el.id) return false;
-    if (el.closest && el.closest("#qwintly-editor-toolbar")) return false;
+    if (el.closest?.("#qwintly-editor-toolbar")) return false;
     return true;
   }
 
@@ -79,25 +75,22 @@
     toolbar.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      var btn =
-        e.target && e.target.closest
-          ? e.target.closest("button[data-action]")
-          : null;
+      const btn = e.target?.closest?.("button[data-action]") || null;
       if (!btn) return;
-      var action = btn.getAttribute("data-action");
+      const action = btn.dataset.action;
       if (action === "confirm") confirmEdit();
-      if (action === "cancel") cancelEdit();
-      if (action === "delete") deleteActiveEl();
+      else if (action === "cancel") cancelEdit();
+      else if (action === "delete") deleteActiveEl();
     });
     document.body.appendChild(toolbar);
     return toolbar;
   }
 
   function positionToolbarFor(el) {
-    var t = ensureToolbar();
-    var rect = el.getBoundingClientRect();
-    var top = Math.max(8, rect.top + window.scrollY - 42);
-    var left = Math.max(8, rect.left + window.scrollX);
+    const t = ensureToolbar();
+    const rect = el.getBoundingClientRect();
+    const top = Math.max(8, rect.top + window.scrollY - 42);
+    const left = Math.max(8, rect.left + window.scrollX);
     t.style.top = top + "px";
     t.style.left = left + "px";
     t.style.display = "flex";
@@ -112,7 +105,7 @@
     try {
       if (!window.parent) return;
       window.parent.postMessage(
-        Object.assign({ source: SOURCE }, payload),
+        { source: SOURCE, ...payload },
         parentOrigin || "*",
       );
     } catch {}
@@ -131,10 +124,10 @@
   }
 
   function confirmEdit() {
-    if (!activeEl || !activeEl.id) return;
-    var elId = activeEl.id;
-    var newText = activeEl.innerText == null ? "" : String(activeEl.innerText);
-    var oldText = activeOldText == null ? "" : String(activeOldText);
+    if (!activeEl?.id) return;
+    const elId = activeEl.id;
+    const newText = activeEl.innerText == null ? "" : String(activeEl.innerText);
+    const oldText = activeOldText == null ? "" : String(activeOldText);
     clearActive();
     hideToolbar();
     if (newText === oldText) return;
@@ -154,13 +147,13 @@
   }
 
   function deleteActiveEl() {
-    if (!activeEl || !activeEl.id) return;
-    var el = activeEl;
-    var parent = el.parentElement;
-    if (!parent || !parent.id) return;
-    var next = el.nextElementSibling;
+    if (!activeEl?.id) return;
+    const el = activeEl;
+    const parent = el.parentElement;
+    if (!parent?.id) return;
+    let next = el.nextElementSibling;
     while (next && !next.id) next = next.nextElementSibling;
-    var payload = {
+    const payload = {
       kind: "delete",
       id: el.id,
       parentId: parent.id,
@@ -176,47 +169,53 @@
   }
 
   function applyOp(op) {
-    if (!op || !op.kind || !op.id) return;
+    if (!op?.kind || !op.id) return;
     if (op.kind === "text") {
-      var el = document.getElementById(op.id);
+      const el = document.getElementById(op.id);
       if (el) el.innerText = op.newText || "";
-      return;
-    }
-    if (op.kind === "delete") {
-      var del = document.getElementById(op.id);
+    } else if (op.kind === "delete") {
+      const del = document.getElementById(op.id);
       if (del) del.remove();
-      return;
+    }
+  }
+
+  function revertTextOp(op) {
+    const el = document.getElementById(op.id);
+    if (el) el.innerText = op.oldText || "";
+  }
+
+  function revertDeleteOp(op) {
+    const parent = document.getElementById(op.parentId);
+    if (!parent) return;
+    if (document.getElementById(op.id)) return;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(op.oldOuterHTML || "", "text/html");
+    const node = doc.body.firstElementChild;
+    if (!node) return;
+
+    const before = op.nextSiblingId
+      ? document.getElementById(op.nextSiblingId)
+      : null;
+    if (before && before.parentElement === parent) {
+      before.before(node);
+    } else {
+      parent.appendChild(node);
     }
   }
 
   function revertOp(op) {
-    if (!op || !op.kind || !op.id) return;
+    if (!op?.kind || !op.id) return;
     if (op.kind === "text") {
-      var el = document.getElementById(op.id);
-      if (el) el.innerText = op.oldText || "";
-      return;
-    }
-    if (op.kind === "delete") {
-      var parent = document.getElementById(op.parentId);
-      if (!parent) return;
-      if (document.getElementById(op.id)) return;
-      var temp = document.createElement("div");
-      temp.innerHTML = op.oldOuterHTML || "";
-      var node = temp.firstElementChild;
-      if (!node) return;
-      var before = op.nextSiblingId
-        ? document.getElementById(op.nextSiblingId)
-        : null;
-      if (before && before.parentElement === parent)
-        parent.insertBefore(node, before);
-      else parent.appendChild(node);
-      return;
+      revertTextOp(op);
+    } else if (op.kind === "delete") {
+      revertDeleteOp(op);
     }
   }
 
   function onMouseOver(e) {
     if (!editEnabled) return;
-    var el = e.target;
+    const el = e.target;
     if (!isEligibleEl(el)) return;
     if (hoveredEl === el) return;
     clearHover();
@@ -226,13 +225,13 @@
 
   function onMouseOut(e) {
     if (!editEnabled) return;
-    var el = e.target;
+    const el = e.target;
     if (hoveredEl && el === hoveredEl) clearHover();
   }
 
   function onClick(e) {
     if (!editEnabled) return;
-    var el = e.target;
+    const el = e.target;
     if (!isEligibleEl(el)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -262,15 +261,14 @@
     ) {
       e.preventDefault();
       deleteActiveEl();
-      return;
     }
   }
 
   window.addEventListener("message", function (event) {
     if (event.source !== window.parent) return;
     if (parentOrigin && event.origin !== parentOrigin) return;
-    var data = event && event.data;
-    if (!data || data.source !== SOURCE) return;
+    const data = event?.data;
+    if (data?.source !== SOURCE) return;
 
     if (data.type === "PING") {
       postToParent({

@@ -36,7 +36,7 @@ const CSS_VAR_BY_TOKEN: Record<StyleTokenKey, string> = {
 };
 
 function escapeStyleTagBreaker(css: string) {
-  return css.replace(/<\/style/gi, "<\\/style");
+  return css.replace(/<\/style/gi, String.raw`<\/style`);
 }
 
 export function buildCssVars(config: StyleConfig) {
