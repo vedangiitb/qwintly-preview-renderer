@@ -75,7 +75,7 @@ export function NotFoundPage() {
         radius: baseRadius,
         baseRadius,
         color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: isClick ? 1.0 : Math.random() * 0.5 + 0.2,
+        alpha: isClick ? 1 : Math.random() * 0.5 + 0.2,
         pulseSpeed: Math.random() * 0.02 + 0.005,
         pulseTime: Math.random() * Math.PI * 2,
       };
@@ -228,14 +228,14 @@ export function NotFoundPage() {
   }, [mouse]);
 
   const handleRefresh = () => {
-    window.location.href = "/";
+    globalThis.location.href = "/";
   };
 
   const handleGoBack = () => {
-    if (window.history.length > 1) {
-      window.history.back();
+    if (globalThis.history.length > 1) {
+      globalThis.history.back();
     } else {
-      window.location.href = "/";
+      globalThis.location.href = "/";
     }
   };
 
