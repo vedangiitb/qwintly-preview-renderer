@@ -16,14 +16,16 @@ const tailwindCompilerPromise = compile('@import "tailwindcss";', {
   async loadStylesheet(id, base) {
     // Keep resolution statically analyzable for Turbopack by avoiding `require.resolve(...)`.
     // Tailwind's runtime compiler will request `tailwindcss` (and sometimes subpaths).
-    const resolved =
-      id === "tailwindcss"
-        ? path.join(tailwindRoot, "index.css")
-        : id.startsWith("tailwindcss/")
-          ? path.join(tailwindRoot, `${id.slice("tailwindcss/".length)}.css`)
-          : id.startsWith(".") || id.startsWith("/")
-            ? path.resolve(base, id)
-            : id;
+    let resolved: string;
+    if (id === "tailwindcss") {
+      resolved = path.join(tailwindRoot, "index.css");
+    } else if (id.startsWith("tailwindcss/")) {
+      resolved = path.join(tailwindRoot, `${id.slice("tailwindcss/".length)}.css`);
+    } else if (id.startsWith(".") || id.startsWith("/")) {
+      resolved = path.resolve(base, id);
+    } else {
+      resolved = id;
+    }
 
     const content = await readFile(resolved, "utf8");
     return {
@@ -36,9 +38,9 @@ const tailwindCompilerPromise = compile('@import "tailwindcss";', {
 
 export default async function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ slug?: string[] }>;
-}) {
+}>) {
   const h = await headers();
   const pageConfigId = h.get("x-gen-session-id");
 

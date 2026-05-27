@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { RotateCw, Home, ArrowLeft, HelpCircle } from "lucide-react";
+import { RotateCw, ArrowLeft, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function NotFoundPage() {
@@ -52,12 +51,16 @@ export function NotFoundPage() {
     // Colors: sleek neon violet, cyan, indigo, and soft whites
     const colors = [
       "rgba(168, 85, 247, ", // Violet
-      "rgba(6, 182, 212, ",  // Cyan
-      "rgba(99, 102, 241, ",  // Indigo
+      "rgba(6, 182, 212, ", // Cyan
+      "rgba(99, 102, 241, ", // Indigo
       "rgba(255, 255, 255, ", // White
     ];
 
-    const createParticle = (x?: number, y?: number, isClick = false): Particle => {
+    const createParticle = (
+      x?: number,
+      y?: number,
+      isClick = false,
+    ): Particle => {
       const px = x ?? Math.random() * width;
       const py = y ?? Math.random() * height;
       const angle = Math.random() * Math.PI * 2;
@@ -175,7 +178,8 @@ export function NotFoundPage() {
           const maxDist = 120;
 
           if (dist < maxDist) {
-            const lineAlpha = (1 - dist / maxDist) * 0.12 * Math.min(p.alpha, p2.alpha);
+            const lineAlpha =
+              (1 - dist / maxDist) * 0.12 * Math.min(p.alpha, p2.alpha);
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
@@ -251,13 +255,16 @@ export function NotFoundPage() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none z-0 animate-pulse duration-[10s]" />
 
       {/* Header */}
-      <header className="relative z-10 px-8 py-6 flex items-center justify-between border-b border-white/[0.04] bg-slate-950/30 backdrop-blur-md">
+      <header className="relative z-10 px-8 py-6 flex items-center justify-between border-b border-white/4 bg-slate-950/30 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center font-bold text-white text-sm shadow-[0_0_15px_-3px_rgba(168,85,247,0.5)]">
+          <div className="h-7 w-7 rounded-lg bg-linear-to-tr from-purple-600 to-cyan-500 flex items-center justify-center font-bold text-white text-sm shadow-[0_0_15px_-3px_rgba(168,85,247,0.5)]">
             Q
           </div>
           <span className="font-semibold tracking-wide text-white text-base">
-            Qwintly <span className="text-xs text-cyan-400 font-mono ml-1 px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-800/30">Preview</span>
+            Qwintly{" "}
+            <span className="text-xs text-cyan-400 font-mono ml-1 px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-800/30">
+              Preview
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -274,20 +281,20 @@ export function NotFoundPage() {
             <div className="absolute inset-0 rounded-full border border-dashed border-slate-700/50 animate-[spin_40s_linear_infinite]" />
             <div className="absolute inset-2 rounded-full border border-purple-500/20 animate-[spin_25s_linear_infinite]" />
             <div className="absolute inset-6 rounded-full border border-cyan-500/20 animate-[spin_15s_linear_infinite_reverse]" />
-            
+
             {/* Pulsing center radar node */}
-            <div className="relative flex items-center justify-center h-16 w-16 rounded-full bg-slate-900 border border-white/[0.08] shadow-inner">
+            <div className="relative flex items-center justify-center h-16 w-16 rounded-full bg-slate-900 border border-white/8 shadow-inner">
               <HelpCircle className="h-8 w-8 text-cyan-400 animate-bounce duration-[3s]" />
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-purple-500/10 to-cyan-500/10 blur-sm pointer-events-none" />
+              <div className="absolute -inset-1 rounded-full bg-linear-to-tr from-purple-500/10 to-cyan-500/10 blur-sm pointer-events-none" />
             </div>
           </div>
 
           {/* Glowing 404 Text */}
           <div className="relative inline-block select-none">
-            <h1 className="text-8xl md:text-9xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-slate-500 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+            <h1 className="text-8xl md:text-9xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-linear-to-b from-white via-slate-200 to-slate-500 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
               404
             </h1>
-            <div className="absolute -inset-x-6 top-1/2 h-12 bg-gradient-to-r from-purple-500/30 to-cyan-500/30 blur-2xl opacity-40 pointer-events-none" />
+            <div className="absolute -inset-x-6 top-1/2 h-12 bg-linear-to-r from-purple-500/30 to-cyan-500/30 blur-2xl opacity-40 pointer-events-none" />
           </div>
 
           {/* Explanation text */}
@@ -296,7 +303,9 @@ export function NotFoundPage() {
               Preview Configuration Missing
             </h2>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed font-light">
-              We couldn't locate this preview session. The preview may have expired, or the editor might be reloading.
+              {
+                "We couldn't locate this preview session. The preview may have expired, or the editor might be reloading."
+              }
             </p>
           </div>
 
@@ -306,17 +315,17 @@ export function NotFoundPage() {
               onClick={handleGoBack}
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto h-11 px-5 border-white/[0.08] bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all duration-200 gap-2 font-medium"
+              className="w-full sm:w-auto h-11 px-5 border-white/8 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-all duration-200 gap-2 font-medium"
             >
               <ArrowLeft className="h-4 w-4" />
               Go Back
             </Button>
-            
+
             <Button
               onClick={handleRefresh}
               variant="default"
               size="lg"
-              className="w-full sm:w-auto h-11 px-5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-medium shadow-[0_4px_20px_-4px_rgba(168,85,247,0.4)] hover:shadow-[0_4px_24px_rgba(168,85,247,0.6)] border-none transition-all duration-200 gap-2"
+              className="w-full sm:w-auto h-11 px-5 bg-linear-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-medium shadow-[0_4px_20px_-4px_rgba(168,85,247,0.4)] hover:shadow-[0_4px_24px_rgba(168,85,247,0.6)] border-none transition-all duration-200 gap-2"
             >
               <RotateCw className="h-4 w-4" />
               Reload Preview
@@ -326,8 +335,10 @@ export function NotFoundPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-6 text-center text-xs text-slate-500 border-t border-white/[0.03] bg-slate-950/20 backdrop-blur-md">
-        <p>© {new Date().getFullYear()} Qwintly Builder. All rights reserved.</p>
+      <footer className="relative z-10 py-6 text-center text-xs text-slate-500 border-t border-white/3 bg-slate-950/20 backdrop-blur-md">
+        <p>
+          © {new Date().getFullYear()} Qwintly Builder. All rights reserved.
+        </p>
       </footer>
     </div>
   );
