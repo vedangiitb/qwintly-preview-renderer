@@ -28,7 +28,7 @@
   }
 
   function isEligibleEl(el) {
-    if (!el || el.nodeType !== 1) return false;
+    if (el?.nodeType !== 1) return false;
     const tag = (el.tagName || "").toLowerCase();
     if (
       tag === "html" ||
@@ -197,7 +197,7 @@
     const before = op.nextSiblingId
       ? document.getElementById(op.nextSiblingId)
       : null;
-    if (before && before.parentElement === parent) {
+    if (before?.parentElement === parent) {
       before.before(node);
     } else {
       parent.appendChild(node);
