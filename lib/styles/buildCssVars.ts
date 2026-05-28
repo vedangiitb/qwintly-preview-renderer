@@ -4,8 +4,8 @@ import type { StyleConfig, StyleTokenKey } from "@/types/styleConfig";
 const CSS_VAR_BY_TOKEN: Record<StyleTokenKey, string> = STYLE_TOKEN_KEYS.reduce(
   (acc, key) => {
     const kebab = key
-      .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-      .replace(/([a-zA-Z])([0-9])/g, "$1-$2")
+      .replace(/([a-z\d])([A-Z])/g, "$1-$2")
+      .replace(/([a-zA-Z])(\d)/g, "$1-$2")
       .toLowerCase();
     acc[key] = `--${kebab}`;
     return acc;
