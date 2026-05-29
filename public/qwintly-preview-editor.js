@@ -126,7 +126,8 @@
   function confirmEdit() {
     if (!activeEl?.id) return;
     const elId = activeEl.id;
-    const newText = activeEl.innerText == null ? "" : String(activeEl.innerText);
+    const newText =
+      activeEl.innerText == null ? "" : String(activeEl.innerText);
     const oldText = activeOldText == null ? "" : String(activeOldText);
     clearActive();
     hideToolbar();
@@ -295,6 +296,33 @@
   document.addEventListener("mouseout", onMouseOut, true);
   document.addEventListener("click", onClick, true);
   document.addEventListener("keydown", onKeyDown, true);
+
+  // --- ADDED NAVIGATION OBSERVER ---
+  function notifyRouteChange() {
+    postToParent({
+      type: "ROUTE",
+      route:
+        window.location.pathname +
+        window.location.search +
+        window.location.hash,
+    });
+  }
+
+  (function () {
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function () {
+      originalPushState.apply(window.history, arguments);
+      notifyRouteChange();
+    };
+    const originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function () {
+      originalReplaceState.apply(window.history, arguments);
+      notifyRouteChange();
+    };
+  })();
+  window.addEventListener("popstate", notifyRouteChange);
+  window.addEventListener("hashchange", notifyRouteChange);
+  // ---------------------------------
 
   postToParent({
     type: "READY",
