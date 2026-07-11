@@ -23,7 +23,9 @@
       "#qwintly-editor-toolbar button:hover{background:rgba(255,255,255,.18)}" +
       "#qwintly-editor-toolbar .qwintly-editor-sep{width:1px;background:rgba(255,255,255,.22);margin:0 2px}" +
       ".qwintly-editor-hover{outline:2px solid rgba(59,130,246,.85)!important;outline-offset:2px!important;box-shadow:0 0 0 3px rgba(59,130,246,.12)!important}" +
-      ".qwintly-editor-active{outline:2px solid rgba(34,197,94,.95)!important;outline-offset:2px!important;box-shadow:0 0 0 3px rgba(34,197,94,.16)!important}";
+      ".qwintly-editor-active{outline:2px solid rgba(34,197,94,.95)!important;outline-offset:2px!important;box-shadow:0 0 0 3px rgba(34,197,94,.16)!important}" +
+      "#qwintly-editor-toolbar button[data-action=ai-select]{background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%)!important;border:1px solid rgba(255,255,255,.25)!important;display:flex;align-items:center;justify-content:center;padding:5px 7px}" +
+      "#qwintly-editor-toolbar button[data-action=ai-select]:hover{background:linear-gradient(135deg,#4f46e5 0%,#9333ea 100%)!important;box-shadow:0 0 8px rgba(99,102,241,.5)}";
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -64,6 +66,10 @@
     toolbar = document.createElement("div");
     toolbar.id = "qwintly-editor-toolbar";
     toolbar.innerHTML =
+      '<button type="button" data-action="ai-select" title="Select with AI">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg>' +
+      '</button>' +
+      '<span class="qwintly-editor-sep"></span>' +
       '<button type="button" data-action="confirm" title="Confirm">&#10003;</button>' +
       '<button type="button" data-action="cancel" title="Cancel">&#10005;</button>' +
       '<span class="qwintly-editor-sep"></span>' +
@@ -81,9 +87,21 @@
       if (action === "confirm") confirmEdit();
       else if (action === "cancel") cancelEdit();
       else if (action === "delete") deleteActiveEl();
+      else if (action === "ai-select") selectActiveElWithAi();
     });
     document.body.appendChild(toolbar);
     return toolbar;
+  }
+
+  function selectActiveElWithAi() {
+    if (!activeEl?.id) return;
+    const elId = activeEl.id;
+    clearActive();
+    hideToolbar();
+    postToParent({
+      type: "ELEMENT_SELECTED",
+      id: elId,
+    });
   }
 
   function positionToolbarFor(el) {
@@ -112,6 +130,7 @@
   }
 
   function startEdit(el) {
+    clearHover();
     clearActive();
     activeEl = el;
     activeOldText = el.innerText == null ? "" : String(el.innerText);
