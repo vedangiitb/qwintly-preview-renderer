@@ -11,8 +11,17 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "coverage/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "vitest.setup.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@next/next/no-sync-scripts": "off",
+      "@next/next/no-html-link-for-pages": "off",
+    }
+  }
 ]);
 
 export default eslintConfig;
