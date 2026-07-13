@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'node:path';
+import Page from '../../../app/[[...slug]]/page';
 
 const mockHeadersGet = vi.fn();
 vi.mock('next/headers', () => ({
@@ -23,7 +24,6 @@ vi.mock('@/lib/snapshot/getSnapshot', () => ({
   getSnapshot: vi.fn(),
 }));
 
-
 vi.mock('node:fs/promises', () => {
   const mockReadFile = vi.fn().mockResolvedValue('/* mocked css file */');
   return {
@@ -42,17 +42,18 @@ describe('Page Component', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_PARENT_ORIGIN = 'https://parent.example.com';
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     process.env = { ...originalEnv };
   });
 
   it('renders NotFoundPage when x-gen-session-id header is missing', async () => {
     mockHeadersGet.mockReturnValue(null);
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
 
     const pagePromise = Page({ params: Promise.resolve({ slug: [] }) });
     const { unmount } = render(await pagePromise);
@@ -66,7 +67,6 @@ describe('Page Component', () => {
     const { getSnapshot } = await import('@/lib/snapshot/getSnapshot');
     vi.mocked(getSnapshot).mockResolvedValueOnce(null as any);
 
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
     const pagePromise = Page({ params: Promise.resolve({ slug: [] }) });
     const { unmount } = render(await pagePromise);
 
@@ -81,7 +81,6 @@ describe('Page Component', () => {
       routes: {} // missing root route "/"
     } as any);
 
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
     const pagePromise = Page({ params: Promise.resolve({ slug: [] }) });
     const { unmount } = render(await pagePromise);
 
@@ -100,7 +99,6 @@ describe('Page Component', () => {
       }
     } as any);
 
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
     const pagePromise = Page({ params: Promise.resolve({ slug: [] }) });
     await expect(pagePromise).rejects.toThrow('NEXT_PUBLIC_PARENT_ORIGIN is required');
   });
@@ -126,7 +124,6 @@ describe('Page Component', () => {
       }
     } as any);
 
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
     const pagePromise = Page({ params: Promise.resolve({ slug: ['about', 'us'] }) });
     const { container } = render(await pagePromise);
 
@@ -153,7 +150,6 @@ describe('Page Component', () => {
       }
     } as any);
 
-    const Page = (await import('../../../app/[[...slug]]/page')).default;
     await Page({ params: Promise.resolve({ slug: [] }) });
 
     const loader = (globalThis as any).__capturedLoadStylesheet;
