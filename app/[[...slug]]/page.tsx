@@ -6,35 +6,44 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { compile } from "tailwindcss";
 import { NotFoundPage } from "@/components/not-found-page";
 
 const projectRoot = process.cwd();
 const tailwindRoot = path.join(projectRoot, "node_modules", "tailwindcss");
 
-const tailwindCompilerPromise = compile('@import "tailwindcss";', {
-  async loadStylesheet(id, base) {
-    // Keep resolution statically analyzable for Turbopack by avoiding `require.resolve(...)`.
-    // Tailwind's runtime compiler will request `tailwindcss` (and sometimes subpaths).
-    let resolved: string;
-    if (id === "tailwindcss") {
-      resolved = path.join(tailwindRoot, "index.css");
-    } else if (id.startsWith("tailwindcss/")) {
-      resolved = path.join(tailwindRoot, `${id.slice("tailwindcss/".length)}.css`);
-    } else if (id.startsWith(".") || id.startsWith("/")) {
-      resolved = path.resolve(base, id);
-    } else {
-      resolved = id;
-    }
+let tailwindCompilerPromise: Promise<{
+  build(candidates: string[]): string;
+}> | null = null;
 
-    const content = await readFile(resolved, "utf8");
-    return {
-      path: resolved,
-      base: path.dirname(resolved),
-      content,
-    };
-  },
-});
+async function getTailwindCompiler() {
+  if (!tailwindCompilerPromise) {
+    const { compile } = await import("tailwindcss");
+    tailwindCompilerPromise = compile('@import "tailwindcss";', {
+      async loadStylesheet(id, base) {
+        // Keep resolution statically analyzable for Turbopack by avoiding `require.resolve(...)`.
+        // Tailwind's runtime compiler will request `tailwindcss` (and sometimes subpaths).
+        let resolved: string;
+        if (id === "tailwindcss") {
+          resolved = path.join(tailwindRoot, "index.css");
+        } else if (id.startsWith("tailwindcss/")) {
+          resolved = path.join(tailwindRoot, `${id.slice("tailwindcss/".length)}.css`);
+        } else if (id.startsWith(".") || id.startsWith("/")) {
+          resolved = path.resolve(base, id);
+        } else {
+          resolved = id;
+        }
+
+        const content = await readFile(resolved, "utf8");
+        return {
+          path: resolved,
+          base: path.dirname(resolved),
+          content,
+        };
+      },
+    });
+  }
+  return tailwindCompilerPromise;
+}
 
 export default async function Page({
   params,
@@ -65,7 +74,7 @@ export default async function Page({
   }
 
   const candidates = collectTailwindCandidates(pageConfig.elements);
-  const compiler = await tailwindCompilerPromise;
+  const compiler = await getTailwindCompiler();
   const runtimeCss = compiler.build(candidates);
   const parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN;
 

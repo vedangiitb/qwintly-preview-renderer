@@ -25,7 +25,6 @@ export function NotFoundPage() {
 
     // Handle resize
     const handleResize = () => {
-      if (!canvas) return;
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
