@@ -1,0 +1,135 @@
+name: CI & Dev CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC)
+
+env:
+  SERVICE_NAME: qwintly-preview-renderer
+  IMAGE_NAME: qwintly-preview-renderer
+
+jobs:
+  # 1. Validation and Security Auditing
+  validate:
+    name: Lint, Audit & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Tests & Coverage
+        run: npm run test:coverage
+
+      - name: Type Check (TypeScript)
+        run: npm run typecheck
+
+      - name: Dependency Vulnerability Audit
+        run: npm audit --audit-level=high
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
+
+  # 2. SonarCloud Analysis
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Download Coverage Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # 3. Development Continuous Deployment (Triggers ONLY on push to dev branch)
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    needs: [validate, sonarcloud]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    environment: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.PREVIEW_RENDERER_SA_EMAIL }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID_QWINTLY }}
+
+      - name: Configure Docker auth
+        run: |
+          gcloud auth configure-docker ${{ vars.REGION }}-docker.pkg.dev
+
+      - name: Build container
+        run: |
+          IMAGE_TAG="${{ vars.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID_QWINTLY }}/qwintly-images/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build \
+            --build-arg NEXT_PUBLIC_PARENT_ORIGIN=${{ vars.NEXT_PUBLIC_PARENT_ORIGIN }} \
+            --build-arg LOCAL_PARENT_ORIGIN=${{ vars.LOCAL_PARENT_ORIGIN }} \
+            -t $IMAGE_TAG \
+            .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Push container
+        run: |
+          docker push $IMAGE_TAG
+
+      - name: Deploy to Cloud Run (Dev)
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=$IMAGE_TAG \
+            --region=asia-south1 \
+            --platform=managed \
+            --service-account=${{ vars.PREVIEW_RENDERER_SA_EMAIL }} \
+            --allow-unauthenticated \
+            --set-env-vars GCP_PROJECT_ID_QWINTLY=${{ vars.GCP_PROJECT_ID_QWINTLY }},NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }},NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }},NEXT_PUBLIC_PARENT_ORIGIN=${{ vars.NEXT_PUBLIC_PARENT_ORIGIN }},LOCAL_PARENT_ORIGIN=${{ vars.LOCAL_PARENT_ORIGIN }} \
+            --min-instances=0 \
+            --max-instances=10 \
+            --concurrency=1 \
+            --timeout=3600 \
+            --cpu=1 \
+            --memory=1Gi

@@ -28,12 +28,38 @@ describe('NotFoundPage Component', () => {
   const originalInnerWidth = window.innerWidth;
   const originalInnerHeight = window.innerHeight;
 
+  let rafCallbacks: FrameRequestCallback[] = [];
+  let rafSpy: any;
+  let cancelSpy: any;
+
+  const runFrames = (count: number) => {
+    act(() => {
+      for (let i = 0; i < count; i++) {
+        const callbacks = [...rafCallbacks];
+        rafCallbacks = [];
+        callbacks.forEach(cb => cb(0));
+      }
+    });
+  };
+
   beforeEach(() => {
     vi.useFakeTimers();
+    rafCallbacks = [];
+    rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+    cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+      if (id > 0 && id <= rafCallbacks.length) {
+        rafCallbacks[id - 1] = () => {};
+      }
+    });
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    if (rafSpy) rafSpy.mockRestore();
+    if (cancelSpy) cancelSpy.mockRestore();
     globalThis.location = originalLocation;
     globalThis.history = originalHistory;
     window.innerWidth = originalInnerWidth;
@@ -100,8 +126,22 @@ describe('NotFoundPage Component', () => {
   });
 
   it('should handle canvas lifecycle events, resize, and interactions with particle physics', async () => {
-    window.innerWidth = 2;
-    window.innerHeight = 2;
+    window.innerWidth = 800;
+    window.innerHeight = 800;
+
+    const rectSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 800,
+      bottom: 800,
+      width: 800,
+      height: 800,
+      x: 0,
+      y: 0,
+      toJSON: () => {}
+    });
+
+    const randomSpy = vi.spyOn(Math, 'random').mockImplementation(() => 0.1);
 
     const { container, unmount } = render(<NotFoundPage />);
     const mainDiv = container.firstChild as HTMLDivElement;
@@ -123,10 +163,8 @@ describe('NotFoundPage Component', () => {
       }
     });
 
-    // Advance fake timers so requestAnimationFrame runs draw loops with particles and mouse active
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    // Advance multiple frames so requestAnimationFrame runs draw loops with particles and mouse active
+    runFrames(80);
 
     // Trigger mouseleave to clear mouse tracking
     act(() => {
@@ -138,22 +176,22 @@ describe('NotFoundPage Component', () => {
       window.dispatchEvent(new Event('resize'));
     });
 
-    // Advance fake timers again
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    // Advance frames again
+    runFrames(10);
 
+    randomSpy.mockRestore();
+    rectSpy.mockRestore();
     unmount();
   });
 
   it('handles particle cleanup when alpha is low', () => {
+    window.innerWidth = 800;
+    window.innerHeight = 800;
     const randomSpy = vi.spyOn(Math, 'random').mockImplementation(() => -0.35);
     const { unmount } = render(<NotFoundPage />);
-    randomSpy.mockRestore();
 
-    act(() => {
-      vi.advanceTimersByTime(100);
-    });
+    runFrames(5);
+    randomSpy.mockRestore();
     unmount();
   });
 
